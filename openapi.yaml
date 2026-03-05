@@ -1,0 +1,914 @@
+openapi: "3.1.0"
+info:
+  title: ncodx API
+  version: "1.0.0"
+  description: Serverless backend for ncodx — API Gateway HTTP API + Lambda (Node.js 20)
+
+servers:
+  - url: https://api.ncodx.com
+    description: Production
+  - url: http://localhost:3001
+    description: Local dev
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string }
+        name: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string }
+        user: { $ref: '#/components/schemas/User' }
+
+    Project:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        color: { type: string, nullable: true }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Task:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        status: { type: string, enum: [todo, in_progress, done] }
+        priority: { type: string, enum: [low, medium, high] }
+        position: { type: integer }
+        dueDate: { type: string, format: date-time, nullable: true }
+        projectId: { type: string, nullable: true }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Goal:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        status: { type: string }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        dueDate: { type: string, format: date-time, nullable: true }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ShoppingItem:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        quantity: { type: integer }
+        unit: { type: string, nullable: true }
+        checked: { type: boolean }
+        category: { type: string, nullable: true }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Note:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string, nullable: true }
+        content: { type: string, nullable: true }
+        color: { type: string, nullable: true }
+        posX: { type: number }
+        posY: { type: number }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CalendarConnection:
+      type: object
+      properties:
+        id: { type: string }
+        provider: { type: string }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        metadata: { type: object, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CalendarEvent:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+        allDay: { type: boolean }
+        location: { type: string, nullable: true }
+        connectionId: { type: string, nullable: true }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Secret:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    SecretWithValue:
+      allOf:
+        - $ref: '#/components/schemas/Secret'
+        - type: object
+          properties:
+            value: { type: string }
+
+    AiConversation:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string, nullable: true }
+        userId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    AiMessage:
+      type: object
+      properties:
+        id: { type: string }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        conversationId: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    UserSettings:
+      type: object
+      properties:
+        id: { type: string }
+        locale: { type: string }
+        timezone: { type: string }
+        theme: { type: string }
+        metadata: { type: object, nullable: true }
+        userId: { type: string }
+        updatedAt: { type: string, format: date-time }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        statusCode: { type: integer }
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Login (creates user if not exists)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                name: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+
+  /me:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List projects
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Project' }
+    post:
+      tags: [Projects]
+      summary: Create project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                color: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+
+  /projects/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Projects]
+      summary: Get project with tasks
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Project'
+                  - type: object
+                    properties:
+                      tasks:
+                        type: array
+                        items: { $ref: '#/components/schemas/Task' }
+    put:
+      tags: [Projects]
+      summary: Update project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                color: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+    delete:
+      tags: [Projects]
+      summary: Delete project
+      responses:
+        "204": { description: No Content }
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks
+      parameters:
+        - name: project_id
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: priority
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Task' }
+    post:
+      tags: [Tasks]
+      summary: Create task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                status: { type: string }
+                priority: { type: string }
+                position: { type: integer }
+                dueDate: { type: string, format: date-time }
+                projectId: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+
+  /tasks/reorder:
+    put:
+      tags: [Tasks]
+      summary: Reorder task (drag & drop)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task_id]
+              properties:
+                task_id: { type: string }
+                status: { type: string }
+                position: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+
+  /tasks/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Tasks]
+      summary: Get task
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+    put:
+      tags: [Tasks]
+      summary: Update task
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                status: { type: string }
+                priority: { type: string }
+                position: { type: integer }
+                dueDate: { type: string, format: date-time }
+                projectId: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+    delete:
+      tags: [Tasks]
+      summary: Delete task
+      responses:
+        "204": { description: No Content }
+
+  /goals:
+    get:
+      tags: [Goals]
+      summary: List goals
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Goal' }
+    post:
+      tags: [Goals]
+      summary: Create goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                status: { type: string }
+                progress: { type: integer }
+                dueDate: { type: string, format: date-time }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Goal' }
+
+  /goals/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Goals]
+      summary: Update goal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                status: { type: string }
+                progress: { type: integer }
+                dueDate: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Goal' }
+    delete:
+      tags: [Goals]
+      summary: Delete goal
+      responses:
+        "204": { description: No Content }
+
+  /shopping-items:
+    get:
+      tags: [Shopping]
+      summary: List shopping items
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ShoppingItem' }
+    post:
+      tags: [Shopping]
+      summary: Create shopping item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                quantity: { type: integer }
+                unit: { type: string }
+                checked: { type: boolean }
+                category: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ShoppingItem' }
+
+  /shopping-items/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Shopping]
+      summary: Update shopping item
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                quantity: { type: integer }
+                unit: { type: string }
+                checked: { type: boolean }
+                category: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ShoppingItem' }
+    delete:
+      tags: [Shopping]
+      summary: Delete shopping item
+      responses:
+        "204": { description: No Content }
+
+  /notes:
+    get:
+      tags: [Notes]
+      summary: List notes (post-its)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Note' }
+    post:
+      tags: [Notes]
+      summary: Create note
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                content: { type: string }
+                color: { type: string }
+                posX: { type: number }
+                posY: { type: number }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Note' }
+
+  /notes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Notes]
+      summary: Update note (including drag position)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                content: { type: string }
+                color: { type: string }
+                posX: { type: number }
+                posY: { type: number }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Note' }
+    delete:
+      tags: [Notes]
+      summary: Delete note
+      responses:
+        "204": { description: No Content }
+
+  /calendar/connections:
+    get:
+      tags: [Calendar]
+      summary: List calendar connections
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CalendarConnection' }
+    post:
+      tags: [Calendar]
+      summary: Create calendar connection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, access_token]
+              properties:
+                provider: { type: string }
+                access_token: { type: string }
+                refresh_token: { type: string }
+                expires_at: { type: string, format: date-time }
+                metadata: { type: object }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalendarConnection' }
+
+  /calendar/connections/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    delete:
+      tags: [Calendar]
+      summary: Delete calendar connection
+      responses:
+        "204": { description: No Content }
+
+  /calendar/events:
+    get:
+      tags: [Calendar]
+      summary: List calendar events
+      parameters:
+        - name: start
+          in: query
+          schema: { type: string, format: date-time }
+        - name: end
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CalendarEvent' }
+    post:
+      tags: [Calendar]
+      summary: Create manual calendar event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, startAt, endAt]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                startAt: { type: string, format: date-time }
+                endAt: { type: string, format: date-time }
+                allDay: { type: boolean }
+                location: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalendarEvent' }
+
+  /calendar/sync:
+    post:
+      tags: [Calendar]
+      summary: Trigger sync of connected calendars
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  synced: { type: integer }
+                  message: { type: string }
+
+  /secrets:
+    get:
+      tags: [Secrets]
+      summary: List secrets (without values)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Secret' }
+    post:
+      tags: [Secrets]
+      summary: Create secret (value encrypted at rest)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, value]
+              properties:
+                name: { type: string }
+                value: { type: string }
+                category: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Secret' }
+
+  /secrets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Secrets]
+      summary: Get secret with decrypted value
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SecretWithValue' }
+    put:
+      tags: [Secrets]
+      summary: Update secret
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                value: { type: string }
+                category: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Secret' }
+    delete:
+      tags: [Secrets]
+      summary: Delete secret
+      responses:
+        "204": { description: No Content }
+
+  /ai/conversations:
+    get:
+      tags: [AI Chat]
+      summary: List conversations
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AiConversation' }
+    post:
+      tags: [AI Chat]
+      summary: Create conversation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AiConversation' }
+
+  /ai/conversations/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [AI Chat]
+      summary: Get conversation with messages
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/AiConversation'
+                  - type: object
+                    properties:
+                      messages:
+                        type: array
+                        items: { $ref: '#/components/schemas/AiMessage' }
+    delete:
+      tags: [AI Chat]
+      summary: Delete conversation
+      responses:
+        "204": { description: No Content }
+
+  /ai/conversations/{id}/messages:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [AI Chat]
+      summary: Send message, get AI response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string }
+      responses:
+        "200":
+          description: OK — assistant message
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AiMessage' }
+
+  /settings:
+    get:
+      tags: [Settings]
+      summary: Get user settings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserSettings' }
+    put:
+      tags: [Settings]
+      summary: Update user settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                locale: { type: string }
+                timezone: { type: string }
+                theme: { type: string }
+                metadata: { type: object }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserSettings' }

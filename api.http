@@ -1,0 +1,181 @@
+### Variables
+@base = http://localhost:3001
+@token = REPLACE_WITH_TOKEN
+
+### Register
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "secret123",
+  "name": "Test User"
+}
+
+### Login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "secret123"
+}
+
+### Me
+GET {{base}}/me
+Authorization: Bearer {{token}}
+
+### List Projects
+GET {{base}}/projects
+Authorization: Bearer {{token}}
+
+### Create Project
+POST {{base}}/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "My Project",
+  "description": "Test project",
+  "color": "#6366f1"
+}
+
+### List Tasks
+GET {{base}}/tasks
+Authorization: Bearer {{token}}
+
+### Create Task
+POST {{base}}/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Fix login bug",
+  "status": "todo",
+  "priority": "high"
+}
+
+### Reorder Task
+PUT {{base}}/tasks/reorder
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "task_id": "TASK_ID",
+  "status": "in_progress",
+  "position": 0
+}
+
+### List Goals
+GET {{base}}/goals
+Authorization: Bearer {{token}}
+
+### Create Goal
+POST {{base}}/goals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Learn TypeScript",
+  "progress": 30
+}
+
+### List Shopping Items
+GET {{base}}/shopping-items
+Authorization: Bearer {{token}}
+
+### Create Shopping Item
+POST {{base}}/shopping-items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Milk",
+  "quantity": 2,
+  "unit": "L",
+  "category": "Dairy"
+}
+
+### List Notes
+GET {{base}}/notes
+Authorization: Bearer {{token}}
+
+### Create Note
+POST {{base}}/notes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Quick idea",
+  "content": "Build something cool",
+  "color": "#facc15",
+  "posX": 100,
+  "posY": 200
+}
+
+### List Calendar Events
+GET {{base}}/calendar/events
+Authorization: Bearer {{token}}
+
+### Create Calendar Event
+POST {{base}}/calendar/events
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Team meeting",
+  "startAt": "2026-03-10T10:00:00Z",
+  "endAt": "2026-03-10T11:00:00Z"
+}
+
+### List Secrets
+GET {{base}}/secrets
+Authorization: Bearer {{token}}
+
+### Create Secret
+POST {{base}}/secrets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "API_KEY",
+  "value": "super-secret-value",
+  "category": "api"
+}
+
+### List AI Conversations
+GET {{base}}/ai/conversations
+Authorization: Bearer {{token}}
+
+### Create Conversation
+POST {{base}}/ai/conversations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "My first chat"
+}
+
+### Send Message
+POST {{base}}/ai/conversations/CONV_ID/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "Hello, what can you do?"
+}
+
+### Get Settings
+GET {{base}}/settings
+Authorization: Bearer {{token}}
+
+### Update Settings
+PUT {{base}}/settings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "locale": "es",
+  "timezone": "Europe/Madrid",
+  "theme": "dark"
+}

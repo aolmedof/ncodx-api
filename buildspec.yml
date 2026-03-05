@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - npm ci
+
+  pre_build:
+    commands:
+      - npx prisma generate
+      - npm run lint
+      - npm run typecheck
+
+  build:
+    commands:
+      - npm run build
+
+  post_build:
+    commands:
+      - |
+        aws lambda update-function-code \
+          --function-name $LAMBDA_NAME \
+          --zip-file fileb://dist/lambda.zip \
+          --region $AWS_DEFAULT_REGION
+
+artifacts:
+  files:
+    - dist/lambda.zip
+  discard-paths: yes
