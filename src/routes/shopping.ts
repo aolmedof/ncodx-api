@@ -1,56 +1,47 @@
-import prisma from '../lib/prisma';
+import { store, newId } from '../lib/mock-store';
 import { NotFoundError, ForbiddenError, ValidationError } from '../middleware/error';
 import { AppContext, RouteHandler } from '../types';
 
 function parseBody(ctx: AppContext) {
-  try {
-    return JSON.parse(ctx.event.body ?? '{}');
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(ctx.event.body ?? '{}'); } catch { return {}; }
 }
 
 export const listShoppingItems: RouteHandler = async (ctx) => {
-  const items = await prisma.shoppingItem.findMany({
-    where: { userId: ctx.userId },
-    orderBy: [{ checked: 'asc' }, { createdAt: 'desc' }],
-  });
+  const items = store.shoppingItems
+    .find(i => i.userId === ctx.userId)
+    .sort((a, b) => Number(a.checked) - Number(b.checked) || b.createdAt.localeCompare(a.createdAt));
   return { statusCode: 200, body: items };
 };
 
 export const createShoppingItem: RouteHandler = async (ctx) => {
   const { name, quantity, unit, checked, category } = parseBody(ctx);
   if (!name) throw new ValidationError('name is required');
-  const item = await prisma.shoppingItem.create({
-    data: {
-      name,
-      quantity: quantity ?? 1,
-      unit,
-      checked: checked ?? false,
-      category,
-      userId: ctx.userId!,
-    },
+  const now = new Date().toISOString();
+  const item = store.shoppingItems.insert({
+    id: newId(), name,
+    quantity: quantity ?? 1,
+    unit: unit ?? null,
+    checked: checked ?? false,
+    category: category ?? null,
+    userId: ctx.userId!,
+    createdAt: now, updatedAt: now,
   });
   return { statusCode: 201, body: item };
 };
 
 export const updateShoppingItem: RouteHandler = async (ctx, params) => {
-  const item = await prisma.shoppingItem.findUnique({ where: { id: params.id } });
+  const item = store.shoppingItems.byId(params.id);
   if (!item) throw new NotFoundError('Shopping item not found');
   if (item.userId !== ctx.userId) throw new ForbiddenError();
-
   const { name, quantity, unit, checked, category } = parseBody(ctx);
-  const updated = await prisma.shoppingItem.update({
-    where: { id: params.id },
-    data: { name, quantity, unit, checked, category },
-  });
+  const updated = store.shoppingItems.update(params.id, { name, quantity, unit, checked, category });
   return { statusCode: 200, body: updated };
 };
 
 export const deleteShoppingItem: RouteHandler = async (ctx, params) => {
-  const item = await prisma.shoppingItem.findUnique({ where: { id: params.id } });
+  const item = store.shoppingItems.byId(params.id);
   if (!item) throw new NotFoundError('Shopping item not found');
   if (item.userId !== ctx.userId) throw new ForbiddenError();
-  await prisma.shoppingItem.delete({ where: { id: params.id } });
+  store.shoppingItems.remove(params.id);
   return { statusCode: 204, body: null };
 };
