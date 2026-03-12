@@ -4,16 +4,19 @@
 
 import { randomUUID } from 'crypto';
 import {
-  DEMO_USER, DEMO_PROJECTS, DEMO_TASKS, DEMO_GOALS,
+  DEMO_USERS,
+  DEMO_PROJECTS, DEMO_TASKS, DEMO_GOALS,
   DEMO_SHOPPING_ITEMS, DEMO_NOTES, DEMO_SECRETS,
   DEMO_AI_CONVERSATIONS, DEMO_AI_MESSAGES,
   DEMO_CALENDAR_CONNECTIONS, DEMO_CALENDAR_EVENTS,
   DEMO_SETTINGS,
+  DEMO_CONTRACTS, DEMO_TIMESHEETS, DEMO_INVOICES,
+  DEMO_INVOICE_ITEMS, DEMO_INTEGRATIONS,
 } from './mock-data';
 
-// ── type helpers ─────────────────────────────────────────────────────────────
+// ── type helpers ──────────────────────────────────────────────────────────────
 
-export type User = typeof DEMO_USER;
+export type User = typeof DEMO_USERS[0];
 export type Project = typeof DEMO_PROJECTS[0];
 export type Task = typeof DEMO_TASKS[0];
 export type Goal = typeof DEMO_GOALS[0];
@@ -25,6 +28,11 @@ export type AiMessage = typeof DEMO_AI_MESSAGES[0];
 export type CalendarConnection = typeof DEMO_CALENDAR_CONNECTIONS[0];
 export type CalendarEvent = typeof DEMO_CALENDAR_EVENTS[0];
 export type UserSettings = typeof DEMO_SETTINGS;
+export type Contract = typeof DEMO_CONTRACTS[0];
+export type Timesheet = typeof DEMO_TIMESHEETS[0];
+export type Invoice = typeof DEMO_INVOICES[0];
+export type InvoiceItem = typeof DEMO_INVOICE_ITEMS[0];
+export type Integration = typeof DEMO_INTEGRATIONS[0];
 
 // ── generic collection helper ─────────────────────────────────────────────────
 
@@ -32,7 +40,6 @@ class Collection<T extends { id: string }> {
   private items: T[];
 
   constructor(seed: T[]) {
-    // Deep clone so mutations don't affect the seed constants
     this.items = seed.map(i => ({ ...i }));
   }
 
@@ -73,7 +80,7 @@ class Collection<T extends { id: string }> {
 // ── store singleton ───────────────────────────────────────────────────────────
 
 class MockStore {
-  users = new Collection<User>([DEMO_USER]);
+  users = new Collection<User>(DEMO_USERS);
   projects = new Collection<Project>(DEMO_PROJECTS);
   tasks = new Collection<Task>(DEMO_TASKS);
   goals = new Collection<Goal>(DEMO_GOALS);
@@ -85,6 +92,11 @@ class MockStore {
   calendarConnections = new Collection<CalendarConnection>(DEMO_CALENDAR_CONNECTIONS);
   calendarEvents = new Collection<CalendarEvent>(DEMO_CALENDAR_EVENTS);
   settings = new Collection<UserSettings>([DEMO_SETTINGS]);
+  contracts = new Collection<Contract>(DEMO_CONTRACTS);
+  timesheets = new Collection<Timesheet>(DEMO_TIMESHEETS);
+  invoices = new Collection<Invoice>(DEMO_INVOICES);
+  invoiceItems = new Collection<InvoiceItem>(DEMO_INVOICE_ITEMS);
+  integrations = new Collection<Integration>(DEMO_INTEGRATIONS);
 }
 
 export const store = new MockStore();

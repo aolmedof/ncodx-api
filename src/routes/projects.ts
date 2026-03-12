@@ -14,12 +14,35 @@ export const listProjects: RouteHandler = async (ctx) => {
 };
 
 export const createProject: RouteHandler = async (ctx) => {
-  const { name, description, color } = parseBody(ctx);
+  const {
+    name, description, color, icon, status,
+    clientName, clientEmail, hourlyRate, monthlyRate, currency,
+    startDate, endDate,
+    azureDevopsOrg, azureDevopsProject, githubRepo,
+    awsAccountId, awsRegion, jumpserverUsername,
+  } = parseBody(ctx);
   if (!name) throw new ValidationError('name is required');
   const now = new Date().toISOString();
   const project = store.projects.insert({
-    id: newId(), name, description: description ?? null,
-    color: color ?? null, userId: ctx.userId!,
+    id: newId(), userId: ctx.userId!,
+    name,
+    description: description ?? null,
+    color: color ?? '#3B82F6',
+    icon: icon ?? null,
+    status: status ?? 'active',
+    clientName: clientName ?? null,
+    clientEmail: clientEmail ?? null,
+    hourlyRate: hourlyRate ?? null,
+    monthlyRate: monthlyRate ?? null,
+    currency: currency ?? 'USD',
+    startDate: startDate ?? null,
+    endDate: endDate ?? null,
+    azureDevopsOrg: azureDevopsOrg ?? null,
+    azureDevopsProject: azureDevopsProject ?? null,
+    githubRepo: githubRepo ?? null,
+    awsAccountId: awsAccountId ?? null,
+    awsRegion: awsRegion ?? null,
+    jumpserverUsername: jumpserverUsername ?? null,
     createdAt: now, updatedAt: now,
   });
   return { statusCode: 201, body: project };
@@ -39,8 +62,20 @@ export const updateProject: RouteHandler = async (ctx, params) => {
   const project = store.projects.byId(params.id);
   if (!project) throw new NotFoundError('Project not found');
   if (project.userId !== ctx.userId) throw new ForbiddenError();
-  const { name, description, color } = parseBody(ctx);
-  const updated = store.projects.update(params.id, { name, description, color });
+  const {
+    name, description, color, icon, status,
+    clientName, clientEmail, hourlyRate, monthlyRate, currency,
+    startDate, endDate,
+    azureDevopsOrg, azureDevopsProject, githubRepo,
+    awsAccountId, awsRegion, jumpserverUsername,
+  } = parseBody(ctx);
+  const updated = store.projects.update(params.id, {
+    name, description, color, icon, status,
+    clientName, clientEmail, hourlyRate, monthlyRate, currency,
+    startDate, endDate,
+    azureDevopsOrg, azureDevopsProject, githubRepo,
+    awsAccountId, awsRegion, jumpserverUsername,
+  });
   return { statusCode: 200, body: updated };
 };
 

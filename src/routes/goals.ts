@@ -14,15 +14,14 @@ export const listGoals: RouteHandler = async (ctx) => {
 };
 
 export const createGoal: RouteHandler = async (ctx) => {
-  const { title, description, status, progress, dueDate } = parseBody(ctx);
+  const { title, description, progress, targetDate } = parseBody(ctx);
   if (!title) throw new ValidationError('title is required');
   const now = new Date().toISOString();
   const goal = store.goals.insert({
     id: newId(), title,
     description: description ?? null,
-    status: status ?? 'active',
     progress: progress ?? 0,
-    dueDate: dueDate ?? null,
+    targetDate: targetDate ?? null,
     userId: ctx.userId!,
     createdAt: now, updatedAt: now,
   });
@@ -33,10 +32,10 @@ export const updateGoal: RouteHandler = async (ctx, params) => {
   const goal = store.goals.byId(params.id);
   if (!goal) throw new NotFoundError('Goal not found');
   if (goal.userId !== ctx.userId) throw new ForbiddenError();
-  const { title, description, status, progress, dueDate } = parseBody(ctx);
+  const { title, description, progress, targetDate } = parseBody(ctx);
   const updated = store.goals.update(params.id, {
-    title, description, status, progress,
-    dueDate: dueDate !== undefined ? (dueDate ?? null) : goal.dueDate,
+    title, description, progress,
+    targetDate: targetDate !== undefined ? (targetDate ?? null) : goal.targetDate,
   });
   return { statusCode: 200, body: updated };
 };
