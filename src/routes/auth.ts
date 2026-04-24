@@ -10,7 +10,8 @@ function parseBody(ctx: AppContext) {
 
 function safeUser(user: ReturnType<typeof store.users.byId>) {
   if (!user) return null;
-  const { passwordHash: _pw, ...safe } = user;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { passwordHash: _passwordHash, ...safe } = user;
   return safe;
 }
 

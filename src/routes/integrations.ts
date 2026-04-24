@@ -44,7 +44,8 @@ export const createIntegration: RouteHandler = async (ctx) => {
     createdAt: now, updatedAt: now,
   });
 
-  const { tokenEncrypted: _t, refreshTokenEncrypted: _r, ...safe } = integration;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { tokenEncrypted: _tokenEncrypted, refreshTokenEncrypted: _refreshTokenEncrypted, ...safe } = integration;
   return { statusCode: 201, body: safe };
 };
 
@@ -65,7 +66,8 @@ export const updateIntegration: RouteHandler = async (ctx, params) => {
 
   const updated = store.integrations.update(params.id, patch);
   if (!updated) throw new NotFoundError('Integration not found');
-  const { tokenEncrypted: _t, refreshTokenEncrypted: _r, ...safe } = updated;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { tokenEncrypted: _tokenEncrypted2, refreshTokenEncrypted: _refreshTokenEncrypted2, ...safe } = updated;
   return { statusCode: 200, body: safe };
 };
 

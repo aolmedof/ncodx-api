@@ -75,7 +75,7 @@ export const githubBranches: RouteHandler = async (_ctx, params) => ({
   ],
 });
 
-export const githubPulls: RouteHandler = async (_ctx, params) => ({
+export const githubPulls: RouteHandler = async (_ctx, _params) => ({
   statusCode: 200,
   body: [
     { id: 101, number: 42, title: 'feat: add push notifications module', state: 'open', user: { login: 'aolmedof' }, base: { ref: 'main' }, head: { ref: 'feat/notifications' }, created_at: '2025-03-08T09:00:00Z', draft: false },
